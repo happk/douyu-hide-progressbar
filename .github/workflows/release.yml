@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 打包擴充插件
+        run: git archive --format=zip -o "douyu-hide-progressbar-extension-${GITHUB_REF_NAME}.zip" "${GITHUB_REF_NAME}:extension"
+
+      - name: 組 Release 說明
+        run: sed "s/__VERSION__/${GITHUB_REF_NAME}/g" .github/RELEASE_BODY.md > release-notes.md
+
+      - name: 建立 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: douyu-hide-progressbar-extension-*.zip
+          body_path: release-notes.md
+          generate_release_notes: true
