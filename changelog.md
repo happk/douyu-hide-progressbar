@@ -1,5 +1,14 @@
 # changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條 Chrome 擴充）
 
+## v1.5.0 — 2026-11-04 — 新增 Tampermonkey 腳本版
+
+- 新增 `userscript/douyu-hide-progressbar.user.js`：行為與擴充功能版（v1.4.0）相同，控制列／水印／暫停播放鍵邏輯同源。
+  兩邊同步維護：改功能需同時改 `extension/content.js` 與 `userscript/`，見 `README_agent.md` 維護注意。
+- 設置介面：`GM_registerMenuCommand` 註冊「斗魚優化設置」，點擊開啟頁內浮動面板（四個開關＋拉桿＋當頁狀態），取代擴充的工具列彈出視窗。
+  全屏中面板掛進 `fullscreenElement` 才會顯示；改動即存即套。
+- 儲存改用 `GM_getValue`／`GM_setValue`（本機）。
+- 注入預測試（shim GM API）：水印／控制列顯隱與喚出、暫停播放鍵樣式、面板開關與拉桿即時生效，全部通過；TM 實裝待手測。
+
 ## v1.4.0 — 2026-11-04 — 暫停播放鍵隱藏 + 非全屏控制列選項
 
 ### 新增：隱藏暫停時右下角的大播放鍵（重播頁）

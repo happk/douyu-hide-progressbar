@@ -1,4 +1,4 @@
-# 斗魚全屏隱藏進度條（Chrome 擴充功能）
+# 斗魚全屏隱藏進度條（Chrome 擴充 / Tampermonkey 腳本）
 
 ## 緣起
 
@@ -19,27 +19,39 @@
   （`<demand-video-watermark>`）；直播間（www.douyu.com，含未開播輪播）的
   水印是播放器容器內 class 帶 hash 的 div（「斗鱼 房间号：…」）。
   兩種都全程隱藏（不限全屏）。
-- **工具列彈出視窗**：點擊工具列圖示可即時開關功能、調整「滑鼠離底部
-  X px 內顯示控制列」的距離，並顯示目前分頁的除錯資訊（頁面類型、
-  全屏狀態、控制列／水印元素是否找到、是否已隱藏）。設置存在
-  `chrome.storage.sync`，改動即時生效，不用改檔案重裝。
+- **設置面板**：擴充版點工具列圖示、TM 腳本版點 TM 圖示 →「斗魚優化設置」。
+  可即時開關功能、調整「滑鼠離底部 X px 內顯示控制列」的距離，
+  並顯示目前分頁的除錯資訊（頁面類型、全屏狀態、控制列／水印元素是否找到、
+  是否已隱藏）；擴充版設置存在 `chrome.storage.sync`、TM 版存在 `GM_setValue`。
 - 「非全屏也隱藏控制列」**關閉**時，非全屏（含網頁全屏）維持原生行為；
   **開啟**時網頁全屏（PageFull）也一併作用。
 - 控制列功能只作用於 v.douyu.com 重播頁；直播間只處理水印，控制列
   維持斗魚原生行為。
 
-## 安裝（載入未封裝擴充功能）
+## 安裝
+
+兩種擇一即可（同時裝會重複做同樣的事）：
+
+**Tampermonkey 腳本（建議）**
+
+1. 瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充
+2. 點 TM 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 TM 安裝）
+3. 開斗魚頁面，點 TM 圖示 →「斗魚優化設置」開啟設置面板
+
+**Chrome 擴充（載入未封裝）**
 
 1. 開啟 Chrome，網址列輸入 `chrome://extensions`
 2. 右上角打開「開發人員模式」
 3. 點左上角「載入未封裝項目」
 4. 選擇本專案的 `extension` 資料夾
 5. 開一個斗魚影片頁，進全屏測試
+6. 點工具列圖示開啟設置面板
 
-更新版本後：`chrome://extensions` 該卡片按「重新載入」（↻），
-**再重新整理斗魚分頁**即可。
+更新版本後：Tampermonkey 腳本貼回新內容儲存、Chrome 擴充則在 `chrome://extensions` 按「重新載入」（↻），並再次重新整理斗魚分頁。
 
-## 設置（工具列圖示彈出視窗）
+## 設置
+
+擴充版：點工具列圖示的彈出視窗；TM 腳本版：TM 圖示 →「斗魚優化設置」的頁內面板。兩者項目相同：
 
 | 設置 | 預設 | 意義 |
 |------|------|------|
@@ -54,9 +66,8 @@
 
 ## 檔案
 
-- `extension/manifest.json` — MV3 資訊清單（storage + activeTab 權限、content script）
-- `extension/content.js` — 主要邏輯
-- `extension/popup.html` / `extension/popup.js` — 工具列彈出視窗（設置 + 除錯）
+- `extension/` — Chrome 擴充版（MV3：manifest.json、content.js、popup.html、popup.js）
+- `userscript/douyu-hide-progressbar.user.js` — Tampermonkey 腳本版（行為與擴充相同）
 - `changelog.md` — 版本歷史（版本依據以此為準）
 
 ## 已知限制
