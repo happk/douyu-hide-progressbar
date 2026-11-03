@@ -4,10 +4,12 @@
 
 ## 背景
 
-斗魚影片（v.douyu.com）全屏播放時，滑鼠閒置後控制列會收起，但畫面底部仍留一條紅色細進度條，看片時很礙眼。
+斗魚視頻（v.douyu.com）全屏播放時，滑鼠閒置後控制列會收起，但畫面底部仍留一條紅色細進度條，看片時很礙眼。
 官方播放器沒有提供關閉它的設置，所以做一個瀏覽器擴充插件處理。
 
 ## 功能
+
+<img src="./assets/Tampermonkey-config.png" alt="Tampermonkey 設置面板" width="280" />
 
 - **全屏隱藏控制列**（重播頁限定）：
 
@@ -49,7 +51,7 @@
 **Tampermonkey 腳本（建議）**
 
 1. 瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充
-2. 點 Tampermonkey 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 Tampermonkey安裝）
+2. 點 Tampermonkey 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 Tampermonkey 安裝）
 3. 開斗魚頁面，點 Tampermonkey 圖示 →「斗魚優化設置」開啟設置面板
 
 **Chrome 擴充（載入未封裝）**
@@ -58,7 +60,7 @@
 2. 右上角打開「開發人員模式」
 3. 點左上角「載入未封裝項目」
 4. 選擇本專案的 `extension` 資料夾
-5. 開一個斗魚影片頁，進全屏測試
+5. 開一個斗魚視頻頁面，進全屏測試
 6. 點工具列圖示開啟設置面板
 
 更新版本後：Tampermonkey 腳本貼回新內容儲存、Chrome 擴充則在 `chrome://extensions` 按「重新載入」（↻），並再次重新整理斗魚分頁。

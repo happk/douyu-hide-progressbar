@@ -9,6 +9,8 @@
 
 ## 功能
 
+<img src="./assets/Tampermonkey-config.png" alt="Tampermonkey 设置面板" width="280" />
+
 - **全屏隐藏控制栏**（重播页限定）：
 
   进入全屏（点播放器右下角「进入全屏」）→ 整条底部控制栏（含细进度条）隐藏；
@@ -49,7 +51,7 @@
 **Tampermonkey 脚本（建议）**
 
 1. 浏览器安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展
-2. 点 Tampermonkey 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 Tampermonkey安装）
+2. 点 Tampermonkey 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 Tampermonkey 安装）
 3. 开斗鱼页面，点 Tampermonkey 图标 →「斗鱼优化设置」打开设置面板
 
 **Chrome 扩展（加载未打包）**
