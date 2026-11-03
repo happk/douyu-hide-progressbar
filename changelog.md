@@ -1,5 +1,40 @@
 # changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條 Chrome 擴充）
 
+## v1.3.0 — 2026-11-04 — popup 誤判修復 + 直播間水印（用戶回報與需求變更）
+
+### 問題
+- popup 狀態區永遠顯示「這個分頁不是斗魚影片頁」（用戶實測回報）：manifest
+  沒有 `tabs`／`activeTab` 權限，`tabs.query` 回傳的分頁物件不帶 `url`，
+  網址檢查必然失敗
+- 修法：加 `activeTab` 權限——點圖示開 popup 時臨時取得該分頁的網址即可，
+  不用升級到會跳「讀取瀏覽記錄」警告的 `tabs`；拿不到網址時不擋，直接問
+  content script 在不在
+
+### 需求確認：控制列／進度條限定重播頁
+- 用戶明確：控制列功能只要重播（v.douyu.com），直播間（www.douyu.com，
+  含未開播時的自動輪播）完全不碰
+- 原本 content script 就認重播頁元素、直播間不會命中，行為不變；補兩個
+  防呆：mousemove 找控制列加 2 秒限流（直播間永遠找不到，避免滑鼠一動
+  就全頁掃描）、退出全屏的定時校正只在「真的找到過控制列 host」時安排
+
+### 新增：直播間（www.douyu.com）隱藏「斗魚」水印
+- 用戶需求：水印在重播頁與直播間都要除；IAB 實測直播水印是
+  `#room-html5-player` 內 class=`watermark-<hash>` 的 div（CSS module 帶
+  build hash，全頁唯一，內容有「斗鱼 房间号：…」「房间靓号」、輪播
+  「录像场次：…」），`display:none` 可除，截圖前後對照確認
+- 選擇器：穩定 id `#room-html5-player` + class 含 `watermark` 比對
+- 輪播頁（6657）水印掛載較晚（實測 2.5 秒時還沒出現、5 秒內出現），
+  既有 MutationObserver 負責接住
+- manifest：content_scripts 加 `*://www.douyu.com/*`；水印查找改為先試直播
+  選擇器（便宜 querySelector）再穿透 shadow DOM 找重播水印
+
+### 其他
+- popup 狀態區改顯示頁面類型（重播頁／直播間／其他斗魚頁面），直播間不再
+  出現「控制列元素：找不到」的誤導字樣；開關標籤補註適用範圍
+- 新增 `testing/`（回測步驟與紀錄表，gitignore 不入庫）與 `.gitignore`
+- IAB 先行驗證：11106244／6657 水印隱藏有效、重播頁 bar／wm 元素健在
+  （v1.2.x 邏輯未動）；popup 修復效果待用戶手測
+
 ## v1.2.1 — 2026-11-04 — 設置面板文案修正（用戶回報「下緣顯示區高度」不準確）
 
 ### 問題

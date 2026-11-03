@@ -1,0 +1,7 @@
+# 測試用的步驟文檔與紀錄表格（不入庫）
+testing/
+
+# 系統雜物
+Thumbs.db
+desktop.ini
+.DS_Store

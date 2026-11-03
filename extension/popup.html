@@ -19,18 +19,18 @@
   <h1>斗魚全屏優化</h1>
   <div class="row">
     <input type="checkbox" id="opt-bar">
-    <label for="opt-bar">全屏時隱藏控制列與進度條</label>
+    <label for="opt-bar">全屏時隱藏控制列與進度條（重播頁）</label>
   </div>
   <div class="row">
     <input type="checkbox" id="opt-wm">
-    <label for="opt-wm">隱藏左下角「斗魚」水印</label>
+    <label for="opt-wm">隱藏「斗魚」水印（重播頁與直播間）</label>
   </div>
   <div class="slider-row">
     <div class="head">滑鼠離底部 <b id="zone-val">120</b> px 內顯示控制列</div>
     <input type="range" id="opt-zone" min="60" max="240" step="10" value="120">
   </div>
   <div id="status">讀取中…</div>
-  <div class="hint">改動即時生效。狀態區要在斗魚影片分頁開啟才有資訊。</div>
+  <div class="hint">改動即時生效。控制列功能只在重播頁作用；水印在重播頁與直播間都作用。狀態區要在斗魚分頁開啟才有資訊。</div>
   <script src="popup.js"></script>
 </body>
 </html>

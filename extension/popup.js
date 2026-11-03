@@ -25,8 +25,18 @@
   function loadStatus() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const t = tabs && tabs[0];
-      if (!t || !t.id || !t.url || !t.url.includes("v.douyu.com")) {
-        setStatus("這個分頁不是斗魚影片頁（v.douyu.com）。");
+      if (!t || !t.id) {
+        setStatus("找不到目前分頁。");
+        return;
+      }
+      // 分頁網址要靠 activeTab 權限（點圖示開啟 popup 時取得）；
+      // 拿不到網址時不擋，直接問 content script 在不在
+      let host = "";
+      try {
+        host = t.url ? new URL(t.url).hostname : "";
+      } catch (_) {}
+      if (host && host !== "douyu.com" && !host.endsWith(".douyu.com")) {
+        setStatus("這個分頁不是斗魚。");
         return;
       }
       chrome.tabs.sendMessage(t.id, { type: "dyhp-getStatus" }, (res) => {
@@ -35,9 +45,18 @@
           return;
         }
         const s = res.settings || {};
+        const kindText =
+          res.pageKind === "vod"
+            ? "重播頁（全屏隱藏控制列適用）"
+            : res.pageKind === "live"
+              ? "直播間（只處理水印，不碰控制列）"
+              : "斗魚頁面（未偵測到播放器）";
         const lines = [
-          "分頁狀態：" + (res.fullscreen ? "全屏中" : "非全屏"),
-          "控制列元素：" + (res.barFound ? (res.barHidden ? "已由插件隱藏" : "顯示中") : "找不到"),
+          "頁面：" + kindText,
+          "全屏：" + (res.fullscreen ? "是" : "否"),
+          res.pageKind === "live"
+            ? "控制列：直播間不處理"
+            : "控制列元素：" + (res.barFound ? (res.barHidden ? "已由插件隱藏" : "顯示中") : "找不到"),
           "水印元素：" + (res.wmFound ? (res.wmHidden ? "已隱藏" : "存在") : "找不到"),
           "設置：控制列隱藏 " + (s.hideBar ? "開" : "關") +
             "／水印隱藏 " + (s.hideWatermark ? "開" : "關") +

@@ -1,18 +1,24 @@
 /**
- * 斗魚影片（v.douyu.com）
- * 1. 全屏時隱藏底部控制列與進度條，滑鼠移到畫面下緣時顯示（彈出視窗可關閉）
- * 2. 隱藏左下角「斗魚」水印（彈出視窗可關閉）
+ * 斗魚重播頁（v.douyu.com）與直播間（www.douyu.com）
+ * 1. 重播頁：全屏時隱藏底部控制列與進度條，滑鼠移到畫面下緣時顯示（彈出視窗可關閉）
+ * 2. 重播頁與直播間：隱藏「斗魚」水印（彈出視窗可關閉）
  *
  * 原理：
- * 斗魚影片播放器是 Web Components，底部控制列整包放在
+ * 重播頁播放器是 Web Components，底部控制列整包放在
  * <demand-video-controller-bar> 這個元素裡（含細細的紅色進度條
  * ProgressBar），全部都在開放 Shadow DOM 底下；水印則是
  * <demand-video-watermark>（DOM 覆蓋層，不是烤進影片畫面的）。
+ * 直播間播放器（#room-html5-player）是另一套技術，控制列我們完全不碰；
+ * 水印是播放器容器內 class 以 watermark 開頭的 div（CSS module 會帶
+ * build hash，用「含 watermark」比對；2026-11-04 實測全頁唯一），
+ * 內容有「斗鱼 房间号：…」「房间靓号」「录像场次：…」幾種。
  *
- * 做法：全屏時把控制列 host 元素 display:none；滑鼠移到下緣區時
+ * 做法：重播頁全屏時把控制列 host 元素 display:none；滑鼠移到下緣區時
  * 還原、交還斗魚原生邏輯，離開後延遲再隱藏。退出全屏時斗魚可能
  * 在事件之後才重建控制列（會帶著我們留下的 inline style），所以
- * 退出後連續校正幾次，確保一定復原。
+ * 退出後連續校正幾次，確保一定復原。水印兩種頁面都用 display:none，
+ * 換影片／換畫質時元素會重建，用 MutationObserver 補隱藏
+ * （直播間水印掛載較晚，實測 3–5 秒才出現，全靠 observer 接住）。
  *
  * 設置存在 chrome.storage.sync，彈出視窗改動即時生效。
  */
@@ -20,14 +26,17 @@
   "use strict";
 
   const DEFAULTS = {
-    hideBar: true,        // 全屏時隱藏控制列與進度條
-    hideWatermark: true,  // 隱藏左下角「斗魚」水印
+    hideBar: true,        // 重播頁：全屏時隱藏控制列與進度條
+    hideWatermark: true,  // 隱藏「斗魚」水印（重播頁與直播間）
     zone: 120,            // 滑鼠離底部多少 px 以內顯示控制列
   };
   const HIDE_DELAY = 300;  // 滑鼠離開下緣區後，延遲幾 ms 才隱藏（避免輕微晃動造成閃爍）
 
   const BAR_TAG = "DEMAND-VIDEO-CONTROLLER-BAR";
-  const WM_TAG = "DEMAND-VIDEO-WATERMARK";
+  const VOD_WM_TAG = "DEMAND-VIDEO-WATERMARK";
+  // 直播間水印：穩定錨點是播放器容器 id；水印自身 class 帶 build hash，
+  // 用「class 含 watermark」比對（選擇器失敗也不會誤傷，頂多隱不到）
+  const LIVE_WM_SELECTOR = '#room-html5-player div[class*="watermark"]';
 
   let settings = { ...DEFAULTS };
   let barHost = null;
@@ -36,6 +45,7 @@
   let reassertTimers = [];
   let wmHidden = false;    // 水印目前是否由我們隱藏中
   let wmObserver = null;
+  let lastBarLookup = 0;   // 上次全頁找控制列 host 的時間（找不到时限流，直播間不白掃）
 
   // ---- 穿透所有開放 Shadow DOM 找指定 tag 的自訂元素（host）----
   function findHost(tag) {
@@ -60,7 +70,7 @@
     return barHost;
   }
 
-  // ---- 控制列 ----
+  // ---- 控制列（只作用於重播頁：直播間沒有這個元素，永不命中）----
   function hideBar() {
     if (!settings.hideBar) return;
     const host = ensureHost();
@@ -100,9 +110,10 @@
     reassertTimers = [];
     applyBarState();
     applyWatermark(); // 全屏切換可能重新掛載播放器，補隱藏一次
-    if (settings.hideBar) {
+    if (settings.hideBar && barHost) {
       // 斗魚可能在 fullscreenchange 之後才重建控制列（可能帶著我們的 inline style），
-      // 連續校正幾次，確保退出全屏後一定復原
+      // 連續校正幾次，確保退出全屏後一定復原。
+      // 只有真的找到過控制列（重播頁）才安排，直播間不做這些定時全頁掃描
       [200, 600, 1200].forEach((ms) => {
         reassertTimers.push(setTimeout(applyBarState, ms));
       });
@@ -111,6 +122,13 @@
 
   function onMouseMove(e) {
     if (!settings.hideBar || !document.fullscreenElement) return;
+    if (!barHost) {
+      // 全頁搜尋有限流：找不到就 2 秒內不再試（直播間永遠找不到，避免滑鼠一動就掃一次）
+      const now = Date.now();
+      if (now - lastBarLookup < 2000) return;
+      lastBarLookup = now;
+      if (!ensureHost()) return;
+    }
     const inZone = e.clientY >= window.innerHeight - settings.zone;
     if (inZone) {
       clearTimeout(hideTimer);
@@ -121,10 +139,18 @@
     }
   }
 
-  // ---- 水印 ----
+  // ---- 水印（重播頁與直播間兩種，找到哪種處理哪種）----
+  function findWatermark() {
+    // 直播間：一般 DOM，querySelector 就找得到（重播頁沒有這個 id，直接撲空）
+    const live = document.querySelector(LIVE_WM_SELECTOR);
+    if (live) return live;
+    // 重播頁：藏在 shadow DOM 裡，要穿透找
+    return findHost(VOD_WM_TAG);
+  }
+
   function applyWatermark() {
     if (settings.hideWatermark) {
-      const wm = findHost(WM_TAG);
+      const wm = findWatermark();
       if (wm && wm.style.display !== "none") {
         wm.style.display = "none";
       }
@@ -140,23 +166,26 @@
       wmObserver.disconnect();
       wmObserver = null;
     }
-    const wm = findHost(WM_TAG);
+    const wm = findWatermark();
     if (wm && wm.style.display === "none") wm.style.display = "";
     wmHidden = false;
   }
 
-  // 換影片 / 重新掛載播放器時水印元素會重建，用 MutationObserver 補隱藏。
-  // 只對「真的新增了水印元素」的變動反應，避免彈幕列表頻繁插入觸發無謂的全域搜尋。
+  // 換影片 / 換畫質 / 重新掛載播放器時水印元素會重建，用 MutationObserver 補隱藏。
+  // 只對「真的新增了水印元素」的變動反應，避免彈幕／推薦列表頻繁插入觸發無謂的全域搜尋。
   function setupWatermarkObserver() {
     if (!settings.hideWatermark || wmObserver) return;
     wmObserver = new MutationObserver((muts) => {
       for (const m of muts) {
         for (const n of m.addedNodes) {
-          if (
-            n.nodeType === 1 &&
-            (n.tagName === WM_TAG || (n.querySelector && n.querySelector(WM_TAG.toLowerCase())))
-          ) {
-            const wm = findHost(WM_TAG);
+          if (n.nodeType !== 1) continue;
+          const hit =
+            n.tagName === VOD_WM_TAG ||
+            (n.matches && n.matches(LIVE_WM_SELECTOR)) ||
+            (n.querySelector &&
+              (n.querySelector(VOD_WM_TAG.toLowerCase()) || n.querySelector(LIVE_WM_SELECTOR)));
+          if (hit) {
+            const wm = findWatermark();
             if (wm && wm.style.display !== "none") {
               wm.style.display = "none";
               wmHidden = true;
@@ -180,10 +209,12 @@
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === "dyhp-getStatus") {
       const bh = findHost(BAR_TAG);
-      const wm = findHost(WM_TAG);
+      const wm = findWatermark();
+      const livePlayer = !!document.getElementById("room-html5-player");
       sendResponse({
         ok: true,
         settings: { ...settings },
+        pageKind: bh ? "vod" : livePlayer ? "live" : "other",
         fullscreen: !!document.fullscreenElement,
         barFound: !!bh,
         barHidden: !!(bh && bh.style.display === "none" && weHidBar),
