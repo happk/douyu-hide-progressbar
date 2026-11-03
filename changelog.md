@@ -1,0 +1,73 @@
+# changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條 Chrome 擴充）
+
+## v1.2.1 — 2026-11-04 — 設置面板文案修正（用戶回報「下緣顯示區高度」不準確）
+
+### 問題
+- popup slider 原名「下緣顯示區高度」語意不清：該參數實際是「滑鼠游標進入
+  畫面底部多高的範圍時喚出控制列」的感應距離，與任何顯示內容無關
+- 實測參考值：1080p 螢幕設 120 = 螢幕最底 120px 橫帶；控制列本身全屏時
+  約 82px 高（720p 實測），120 ≈ 控制列 + 上方 38px 緩衝帶
+
+### 修改
+- slider 標籤改為「滑鼠離底部 X px 內顯示控制列」，X 為即時數值
+- 順手移除 `.head` 的 flex 佈局（標籤改為含數值的單行文字，
+  原 space-between 會把文字和數值拆到兩端）
+- popup 狀態區對應欄位改為「離底部 N px 內顯示」
+- `content.js` DEFAULTS 補每個參數的白話註解；README 設置表同步
+
+## v1.2.0 — 2026-11-04 — 退出全屏殘留隱藏修復 + 水印去除 + 設置面板（用戶回報 bug 與需求）
+
+### 問題（v1.0.0 bug）
+- 進全屏再退出後，**非全屏**模式控制列也消失（用戶實測回報）
+- 根因：斗魚在 `fullscreenchange` 事件**之後**才重建控制列，
+  重建元素帶著我們留在舊元素上的 `display:none` inline style
+
+### 修復
+- 退出全屏後於 200/600/1200ms 重新定位控制列 host 並校正（`applyBarState`）
+- 引入 `weHidBar` 旗標：只有「我們藏的」才還原——斗魚自己的顯隱走
+  內層 `.ControllerBar` 的 inline `visibility` + `ismousein`，不能覆寫
+
+### 新增：隱藏左下角「斗魚」水印
+- 用戶詢問水印可否去除；實測為 DOM 覆蓋層 `<demand-video-watermark>`
+  （非烤進影片畫面），host `display:none` 即可，不限全屏、全程隱藏
+- MutationObserver 補隱藏（換影片／重新掛載時元素會重建）；observer 只對
+  「真的新增了水印元素」的變動反應，避免右側彈幕列表頻繁插入觸發全域搜尋
+- 彈出視窗可開關；關閉時還原顯示並斷開 observer
+
+### 新增：工具列彈出視窗
+- 用戶要求：圖示應可設置與看除錯資訊，而不是安裝前改參數
+- popup：兩個開關（全屏隱藏控制列／隱藏水印）、slider（感應距離 60–240px）、
+  分頁狀態除錯（全屏與否、控制列／水印元素是否找到、是否已由插件隱藏；
+  非斗魚分頁或頁面未重新整理時顯示對應提示）
+- 設置存 `chrome.storage.sync`，content script 監聽 `onChanged` 即時套用；
+  manifest 加 `storage` 權限與 `action.default_popup`
+
+### 驗證
+- bug 場景由用戶實測回報、修復邏輯依其現象設計；修復效果與水印／面板
+  尚未經用戶端回測
+
+## v1.0.0 — 2026-11-04 — 初版
+
+### 實測基礎（v.douyu.com/show/<id>，CS2 直播錄像，1280×720，ZCode IAB）
+- 播放器全為開放 Shadow DOM Web Components；`document.querySelector("video")`
+  找不到 video（藏在 shadow root）
+- 控制列 host `<demand-video-controller-bar>`（id `demandcontroller-bar`）；
+  全屏時內層 `.ControllerBar` 加 `is-fullscreen` 類、高 82px
+- 用戶看到的「部分進度條」= 內層 `div.ProgressBar`，僅 3px 高（y 675–678），
+  疊在控制列上緣
+- 官方無「隱藏進度條」設置；Greasy Fork 現有腳本（better-DouYu、DouyuEx、
+  改掉斗鱼各种烦人的地方、隐藏礼物栏等）全部針對 www.douyu.com 直播間，
+  查證後無一涵蓋此需求 → 客製擴充
+
+### 功能
+- 全屏（`document.fullscreenElement`）時控制列 host `display:none`，
+  整包含細進度條一起消失；滑鼠進入底部 120px 顯示、離開後 300ms 隱藏
+- 非全屏與「網頁全屏」（`ControllerBar-PageFull`）不介入；只 match `v.douyu.com`
+- MV3、無需特殊權限、無安裝相依
+
+### 已知問題
+- 退出全屏後非全屏控制列殘留隱藏（用戶回報，→ v1.2.0 修復）
+
+---
+
+（v1.1.0 為空號：水印功能原定獨立版本，開發中併入 v1.2.0。）

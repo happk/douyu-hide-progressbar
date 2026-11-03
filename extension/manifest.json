@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "斗魚全屏隱藏進度條",
+  "version": "1.2.1",
+  "description": "斗魚影片（v.douyu.com）全屏時隱藏底部控制列與進度條，滑鼠移到畫面下緣時顯示；可隱藏「斗魚」水印。點工具列圖示即時設置。",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "斗魚全屏優化設置"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://v.douyu.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
