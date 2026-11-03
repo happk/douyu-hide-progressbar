@@ -1,8 +1,11 @@
 // ==UserScript==
 // @name         斗魚全屏隱藏進度條
 // @namespace    eric-douyu-hide-progressbar
-// @version      1.4.0
+// @version      1.5.1
 // @description  斗魚重播頁（v.douyu.com）隱藏底部控制列與進度條（全屏，或非全屏也可選），滑鼠移到畫面下緣時顯示；重播頁與直播間都可隱藏「斗魚」水印與暫停播放鍵。由 Tampermonkey 選單開啟設置。
+// @homepageURL  https://github.com/happk/douyu-hide-progressbar
+// @supportURL   https://github.com/happk/douyu-hide-progressbar/issues
+// @license      MIT
 // @match        *://v.douyu.com/*
 // @match        *://www.douyu.com/*
 // @run-at       document-idle
@@ -286,6 +289,7 @@
     settings[key] = value;
     GM_setValue(key, value);
     onSettingsChanged();
+    refreshPanelStatus(); // 面板開著時，狀態區跟著開關即時刷新
   }
 
   function onSettingsChanged() {

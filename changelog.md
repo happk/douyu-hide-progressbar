@@ -1,5 +1,12 @@
 # changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條）
 
+## v1.5.1 — 2026-11-04 — Tampermonkey腳本發布整備
+
+- Greasy Fork 發布要求宣告授權：補 `// @license MIT`（允許任何人修改與轉發）。
+- 補 `@homepageURL`／`@supportURL`，指向 GitHub repo。
+- 設置面板開著時，切換開關／拉桿後狀態區即時刷新（原先要重開面板才更新）。
+- 僅 Tampermonkey腳本版（`userscript/`）版號升至 1.5.1；擴充版維持 1.4.0 不變。
+
 ## v1.5.0 — 2026-11-04 — 新增 Tampermonkey 腳本版
 
 - 新增 `userscript/douyu-hide-progressbar.user.js`：
@@ -15,7 +22,7 @@
 
 - 注入預測試（shim GM API）：
 
-  水印／控制列顯隱與喚出、暫停播放鍵樣式、面板開關與拉桿即時生效，全部通過；TM 實裝待手測。
+  水印／控制列顯隱與喚出、暫停播放鍵樣式、面板開關與拉桿即時生效，全部通過；Tampermonkey實裝待手測。
 
 ## v1.4.0 — 2026-11-04 — 暫停播放鍵隱藏 + 非全屏控制列選項
 

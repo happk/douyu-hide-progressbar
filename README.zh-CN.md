@@ -30,7 +30,7 @@
 
 - **设置面板**：
 
-  - 扩展版点工具栏图标、TM 脚本版点 TM 图标 →「斗鱼优化设置」。
+  - 扩展版点工具栏图标、Tampermonkey 脚本版点 Tampermonkey 图标 →「斗鱼优化设置」。
 
   - 可即时开关功能、调整「鼠标离底部 X px 内显示控制栏」的距离，
 
@@ -49,8 +49,8 @@
 **Tampermonkey 脚本（建议）**
 
 1. 浏览器安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展
-2. 点 TM 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 TM 安装）
-3. 开斗鱼页面，点 TM 图标 →「斗鱼优化设置」打开设置面板
+2. 点 Tampermonkey 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 Tampermonkey安装）
+3. 开斗鱼页面，点 Tampermonkey 图标 →「斗鱼优化设置」打开设置面板
 
 **Chrome 扩展（加载未打包）**
 
@@ -66,7 +66,7 @@
 ## 设置
 
 - 扩展插件：点工具栏图标的弹出窗口；
-- TM 脚本版：TM 图标 →「斗鱼优化设置」的页内面板。
+- Tampermonkey 脚本版：Tampermonkey 图标 →「斗鱼优化设置」的页内面板。
 
 两者项目相同：
 

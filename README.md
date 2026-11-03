@@ -30,7 +30,7 @@
 
 - **設置面板**：
 
-  - 擴充版點工具列圖示、TM 腳本版點 TM 圖示 →「斗魚優化設置」。
+  - 擴充版點工具列圖示、Tampermonkey 腳本版點 Tampermonkey 圖示 →「斗魚優化設置」。
 
   - 可即時開關功能、調整「滑鼠離底部 X px 內顯示控制列」的距離，
 
@@ -49,8 +49,8 @@
 **Tampermonkey 腳本（建議）**
 
 1. 瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充
-2. 點 TM 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 TM 安裝）
-3. 開斗魚頁面，點 TM 圖示 →「斗魚優化設置」開啟設置面板
+2. 點 Tampermonkey 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 Tampermonkey安裝）
+3. 開斗魚頁面，點 Tampermonkey 圖示 →「斗魚優化設置」開啟設置面板
 
 **Chrome 擴充（載入未封裝）**
 
@@ -66,7 +66,7 @@
 ## 設置
 
 - 擴充插件：點工具列圖示的彈出視窗；
-- TM 腳本版：TM 圖示 →「斗魚優化設置」的頁內面板。
+- Tampermonkey 腳本版：Tampermonkey 圖示 →「斗魚優化設置」的頁內面板。
 
 兩者項目相同：
 
