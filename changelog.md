@@ -1,5 +1,36 @@
 # changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條 Chrome 擴充）
 
+## v1.4.0 — 2026-11-04 — 暫停播放鍵隱藏 + 非全屏控制列選項（用戶需求）
+
+### 新增：隱藏暫停時右下角的大播放鍵（重播頁）
+- 暫停時右下角出現的大圈播放鍵：`<demand-video>` shadow root 內
+  `img.play-icon[-show]`（62×62；實測全頁唯一，控制列自己的播放鍵不是
+  這個 class，不會誤傷）
+- 做法：對 `<demand-video>` 的 shadow root 注入
+  `img[class*="play-icon"] { display:none !important }`——樣式跟著
+  shadow root 走，img 重建也吃到；播放器整包重建時由 MutationObserver
+  與 fullscreenchange 補掛，關閉選項即移除樣式
+- IAB 實測（暫停影片後）：注入樣式截圖確認圈圈消失
+
+### 新增：非全屏也隱藏控制列（重播頁，預設開）
+- 用戶需求：非全屏時控制列／進度條常駐（含暫停時常駐），希望除非滑鼠
+  移到播放器下緣才出現
+- 原本隱藏邏輯只在全屏作用；新增 hideBarNonfull 讓非全屏套用同一套
+  顯隱（離開下緣 300ms 收起）。暫停常駐被一併覆蓋：display:none 直接
+  壓過斗魚「暫停就讓控制列常駐」的行為，全屏暫停時同樣生效
+- 喚出區基準：全屏用視窗底緣（同以往）；非全屏用播放器 `video` 元素
+  底緣——控制列隱藏時 host rect 會變 0×0 不能當基準——並加左右邊界
+  （只在播放器橫向範圍內喚出）；video 查找限流 2 秒，直播間不白掃
+
+### 其他
+- `NOTES.md` 改名 `README_agent.md` 並加入 gitignore（agent 筆記不入庫）；
+  git 歷史以 filter-branch 重寫，將 `NOTES.md` 自所有 commit 移除
+- 兩個新設定預設「開」，彈出視窗（現共四個開關＋拉桿）可關
+
+### 驗證
+- 播放鍵元素定位、唯一性與隱藏效果：IAB 實測通過；非全屏隱藏行為與
+  popup 兩個新開關：待用戶手測
+
 ## v1.3.0 — 2026-11-04 — popup 誤判修復 + 直播間水印（用戶回報與需求變更）
 
 ### 問題

@@ -2,8 +2,15 @@
 (() => {
   "use strict";
 
-  const DEFAULTS = { hideBar: true, hideWatermark: true, zone: 120 };
+  const DEFAULTS = {
+    hideBar: true,
+    hideBarNonfull: true,
+    hideWatermark: true,
+    hidePauseBtn: true,
+    zone: 120,
+  };
   const $ = (id) => document.getElementById(id);
+  const on = (v) => (v ? "開" : "關");
 
   function save(key, value) {
     chrome.storage.sync.set({ [key]: value });
@@ -16,7 +23,9 @@
   function loadSettings() {
     chrome.storage.sync.get(DEFAULTS, (items) => {
       $("opt-bar").checked = items.hideBar;
+      $("opt-nonfull").checked = items.hideBarNonfull;
       $("opt-wm").checked = items.hideWatermark;
+      $("opt-pause").checked = items.hidePauseBtn;
       $("opt-zone").value = items.zone;
       $("zone-val").textContent = items.zone;
     });
@@ -47,7 +56,7 @@
         const s = res.settings || {};
         const kindText =
           res.pageKind === "vod"
-            ? "重播頁（全屏隱藏控制列適用）"
+            ? "重播頁（隱藏控制列／播放鍵適用）"
             : res.pageKind === "live"
               ? "直播間（只處理水印，不碰控制列）"
               : "斗魚頁面（未偵測到播放器）";
@@ -58,8 +67,10 @@
             ? "控制列：直播間不處理"
             : "控制列元素：" + (res.barFound ? (res.barHidden ? "已由插件隱藏" : "顯示中") : "找不到"),
           "水印元素：" + (res.wmFound ? (res.wmHidden ? "已隱藏" : "存在") : "找不到"),
-          "設置：控制列隱藏 " + (s.hideBar ? "開" : "關") +
-            "／水印隱藏 " + (s.hideWatermark ? "開" : "關") +
+          "設置：控制列隱藏 " + on(s.hideBar) +
+            "（非全屏也隱藏 " + on(s.hideBarNonfull) + "）" +
+            "／水印 " + on(s.hideWatermark) +
+            "／暫停播放鍵 " + on(s.hidePauseBtn) +
             "／離底部 " + s.zone + " px 內顯示",
         ];
         setStatus(lines.join("\n"));
@@ -71,7 +82,9 @@
     loadSettings();
     loadStatus();
     $("opt-bar").addEventListener("change", (e) => save("hideBar", e.target.checked));
+    $("opt-nonfull").addEventListener("change", (e) => save("hideBarNonfull", e.target.checked));
     $("opt-wm").addEventListener("change", (e) => save("hideWatermark", e.target.checked));
+    $("opt-pause").addEventListener("change", (e) => save("hidePauseBtn", e.target.checked));
     $("opt-zone").addEventListener("input", (e) => {
       const v = parseInt(e.target.value, 10);
       $("zone-val").textContent = v;

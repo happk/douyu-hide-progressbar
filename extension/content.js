@@ -1,24 +1,29 @@
 /**
  * 斗魚重播頁（v.douyu.com）與直播間（www.douyu.com）
- * 1. 重播頁：全屏時隱藏底部控制列與進度條，滑鼠移到畫面下緣時顯示（彈出視窗可關閉）
+ * 1. 重播頁：全屏（可選：非全屏也）隱藏底部控制列與進度條，
+ *    滑鼠移到畫面下緣時顯示（彈出視窗可關閉）
  * 2. 重播頁與直播間：隱藏「斗魚」水印（彈出視窗可關閉）
+ * 3. 重播頁：隱藏暫停時右下角的大播放鍵（彈出視窗可關閉）
  *
  * 原理：
  * 重播頁播放器是 Web Components，底部控制列整包放在
  * <demand-video-controller-bar> 這個元素裡（含細細的紅色進度條
  * ProgressBar），全部都在開放 Shadow DOM 底下；水印則是
  * <demand-video-watermark>（DOM 覆蓋層，不是烤進影片畫面的）。
+ * 暫停時右下角的大播放鍵是 <demand-video> shadow root 裡的
+ * img.play-icon（2026-11-04 實測全頁唯一），對 shadow root 注入
+ * 樣式即可隱藏，元素重建也會吃到。
  * 直播間播放器（#room-html5-player）是另一套技術，控制列我們完全不碰；
  * 水印是播放器容器內 class 以 watermark 開頭的 div（CSS module 會帶
  * build hash，用「含 watermark」比對；2026-11-04 實測全頁唯一），
  * 內容有「斗鱼 房间号：…」「房间靓号」「录像场次：…」幾種。
  *
- * 做法：重播頁全屏時把控制列 host 元素 display:none；滑鼠移到下緣區時
- * 還原、交還斗魚原生邏輯，離開後延遲再隱藏。退出全屏時斗魚可能
- * 在事件之後才重建控制列（會帶著我們留下的 inline style），所以
- * 退出後連續校正幾次，確保一定復原。水印兩種頁面都用 display:none，
- * 換影片／換畫質時元素會重建，用 MutationObserver 補隱藏
- * （直播間水印掛載較晚，實測 3–5 秒才出現，全靠 observer 接住）。
+ * 做法：把控制列 host 元素 display:none；滑鼠移到下緣區時還原、
+ * 交還斗魚原生邏輯，離開後延遲再隱藏。喚出區的基準：全屏用視窗底、
+ * 非全屏用播放器（video 元素）底緣。退出全屏時斗魚可能在事件之後才
+ * 重建控制列（會帶著我們留下的 inline style），所以退出後連續校正幾次。
+ * 水印兩種頁面都用 display:none，換影片／換畫質時元素會重建，
+ * 用 MutationObserver 補隱藏（直播間水印掛載較晚，實測 3–5 秒才出現）。
  *
  * 設置存在 chrome.storage.sync，彈出視窗改動即時生效。
  */
@@ -27,16 +32,21 @@
 
   const DEFAULTS = {
     hideBar: true,        // 重播頁：全屏時隱藏控制列與進度條
+    hideBarNonfull: true, // 重播頁：非全屏也隱藏控制列，滑鼠靠近播放器下緣才顯示
     hideWatermark: true,  // 隱藏「斗魚」水印（重播頁與直播間）
-    zone: 120,            // 滑鼠離底部多少 px 以內顯示控制列
+    hidePauseBtn: true,   // 隱藏暫停時右下角的大播放鍵（重播頁）
+    zone: 120,            // 滑鼠離播放器底部多少 px 以內顯示控制列
   };
   const HIDE_DELAY = 300;  // 滑鼠離開下緣區後，延遲幾 ms 才隱藏（避免輕微晃動造成閃爍）
 
   const BAR_TAG = "DEMAND-VIDEO-CONTROLLER-BAR";
+  const VIDEO_TAG = "DEMAND-VIDEO";
   const VOD_WM_TAG = "DEMAND-VIDEO-WATERMARK";
   // 直播間水印：穩定錨點是播放器容器 id；水印自身 class 帶 build hash，
   // 用「class 含 watermark」比對（選擇器失敗也不會誤傷，頂多隱不到）
   const LIVE_WM_SELECTOR = '#room-html5-player div[class*="watermark"]';
+  // 暫停時右下角的大播放鍵：img.play-icon[-show]，實測全頁唯一
+  const PAUSE_ICON_STYLE = 'img[class*="play-icon"] { display: none !important; }';
 
   let settings = { ...DEFAULTS };
   let barHost = null;
@@ -46,6 +56,9 @@
   let wmHidden = false;    // 水印目前是否由我們隱藏中
   let wmObserver = null;
   let lastBarLookup = 0;   // 上次全頁找控制列 host 的時間（找不到时限流，直播間不白掃）
+  let videoEl = null;      // 重播頁的 <video>（非全屏喚出區以它底緣為基準）
+  let lastVideoLookup = 0;
+  let pauseStyleEl = null; // 放在 DEMAND-VIDEO shadow root 裡的樣式
 
   // ---- 穿透所有開放 Shadow DOM 找指定 tag 的自訂元素（host）----
   function findHost(tag) {
@@ -70,9 +83,25 @@
     return barHost;
   }
 
+  // 找重播頁的 <video>（連限流一起處理，直播間找不到也不會狂掃）
+  function ensureVideoEl() {
+    if (videoEl && videoEl.isConnected) return videoEl;
+    const now = Date.now();
+    if (now - lastVideoLookup < 2000) return null;
+    lastVideoLookup = now;
+    const host = findHost(VIDEO_TAG);
+    videoEl = host && host.shadowRoot ? host.shadowRoot.querySelector("video") : null;
+    return videoEl;
+  }
+
   // ---- 控制列（只作用於重播頁：直播間沒有這個元素，永不命中）----
+  // 現在該不該藏：全屏看 hideBar，非全屏看 hideBarNonfull
+  function barShouldHide() {
+    return document.fullscreenElement ? settings.hideBar : settings.hideBarNonfull;
+  }
+
   function hideBar() {
-    if (!settings.hideBar) return;
+    if (!barShouldHide()) return;
     const host = ensureHost();
     if (host && host.style.display !== "none") {
       host.style.display = "none";
@@ -97,7 +126,7 @@
   function applyBarState() {
     const host = findHost(BAR_TAG);
     if (host) barHost = host;
-    if (document.fullscreenElement) {
+    if (barShouldHide()) {
       hideBar();
     } else if (weHidBar) {
       showBar();
@@ -110,7 +139,8 @@
     reassertTimers = [];
     applyBarState();
     applyWatermark(); // 全屏切換可能重新掛載播放器，補隱藏一次
-    if (settings.hideBar && barHost) {
+    applyPauseIcon(); // 重建後 shadow root 是新的，樣式要補掛
+    if (barHost) {
       // 斗魚可能在 fullscreenchange 之後才重建控制列（可能帶著我們的 inline style），
       // 連續校正幾次，確保退出全屏後一定復原。
       // 只有真的找到過控制列（重播頁）才安排，直播間不做這些定時全頁掃描
@@ -120,8 +150,32 @@
     }
   }
 
+  // 滑鼠是否在「喚出控制列」的下緣區：全屏用視窗底，非全屏用播放器底緣
+  // （控制列隱藏時 host rect 會變 0，不能拿它當基準，所以用 video 元素）
+  function mouseInRevealZone(e) {
+    const zone = settings.zone;
+    let bottom = window.innerHeight;
+    let left = 0;
+    let right = window.innerWidth;
+    if (!document.fullscreenElement) {
+      const v = ensureVideoEl();
+      if (v) {
+        const r = v.getBoundingClientRect();
+        if (r.height > 0) {
+          bottom = r.bottom;
+          left = r.left;
+          right = r.right;
+        }
+      }
+    }
+    return (
+      e.clientY >= bottom - zone && e.clientY <= bottom &&
+      e.clientX >= left && e.clientX <= right
+    );
+  }
+
   function onMouseMove(e) {
-    if (!settings.hideBar || !document.fullscreenElement) return;
+    if (!barShouldHide()) return;
     if (!barHost) {
       // 全頁搜尋有限流：找不到就 2 秒內不再試（直播間永遠找不到，避免滑鼠一動就掃一次）
       const now = Date.now();
@@ -129,8 +183,7 @@
       lastBarLookup = now;
       if (!ensureHost()) return;
     }
-    const inZone = e.clientY >= window.innerHeight - settings.zone;
-    if (inZone) {
+    if (mouseInRevealZone(e)) {
       clearTimeout(hideTimer);
       showBar();
     } else {
@@ -190,6 +243,7 @@
               wm.style.display = "none";
               wmHidden = true;
             }
+            applyPauseIcon(); // 整個播放器重建時 shadow root 是新的，樣式補掛
             return;
           }
         }
@@ -198,10 +252,35 @@
     wmObserver.observe(document.body, { childList: true, subtree: true });
   }
 
+  // ---- 暫停時右下角的大播放鍵（重播頁）----
+  function applyPauseIcon() {
+    if (!settings.hidePauseBtn) {
+      restorePauseIcon();
+      return;
+    }
+    // 樣式已掛著就什麼都不做（平常每次呼叫都是這條，開銷極低）
+    if (pauseStyleEl && pauseStyleEl.isConnected) return;
+    const host = findHost(VIDEO_TAG);
+    if (!host || !host.shadowRoot) return;
+    if (!videoEl) videoEl = host.shadowRoot.querySelector("video");
+    // 樣式放進 shadow root：img 元素重建也會吃到，不用 observer 逐個補
+    pauseStyleEl = document.createElement("style");
+    pauseStyleEl.textContent = PAUSE_ICON_STYLE;
+    host.shadowRoot.appendChild(pauseStyleEl);
+  }
+
+  function restorePauseIcon() {
+    if (pauseStyleEl) {
+      pauseStyleEl.remove();
+      pauseStyleEl = null;
+    }
+  }
+
   // ---- 設置 ----
   function onSettingsChanged() {
-    if (!settings.hideBar && weHidBar) showBar();
+    if (!barShouldHide() && weHidBar) showBar();
     applyWatermark();
+    applyPauseIcon();
     applyBarState();
   }
 
@@ -238,6 +317,7 @@
   chrome.storage.sync.get(DEFAULTS, (items) => {
     settings = { ...DEFAULTS, ...items };
     applyWatermark();
+    applyPauseIcon();
     applyBarState();
   });
 })();

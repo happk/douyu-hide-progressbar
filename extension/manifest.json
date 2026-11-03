@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "斗魚全屏隱藏進度條",
-  "version": "1.3.0",
-  "description": "斗魚重播頁（v.douyu.com）全屏時隱藏底部控制列與進度條，滑鼠移到畫面下緣時顯示；重播頁與直播間都可隱藏「斗魚」水印。點工具列圖示即時設置。",
+  "version": "1.4.0",
+  "description": "斗魚重播頁（v.douyu.com）隱藏底部控制列與進度條（全屏，或非全屏也可選），滑鼠移到畫面下緣時顯示；重播頁與直播間都可隱藏「斗魚」水印與暫停播放鍵。點工具列圖示即時設置。",
   "permissions": ["storage", "activeTab"],
   "action": {
     "default_popup": "popup.html",
