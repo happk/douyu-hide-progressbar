@@ -48,18 +48,24 @@
 
 兩種擇一即可（同時裝會重複做同樣的事）：
 
-**Tampermonkey 腳本（建議）**
+**Tampermonkey 腳本**
 
 1. 瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充
-2. 點 Tampermonkey 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 Tampermonkey 安裝）
-3. 開斗魚頁面，點 Tampermonkey 圖示 →「斗魚優化設置」開啟設置面板
 
-**Chrome 擴充（載入未封裝）**
+   1. Greasy Fork [鏈結](https://greasyfork.org/zh-TW/scripts/603642-%E6%96%97%E9%B1%BC%E9%9A%90%E8%97%8F%E8%BF%9B%E5%BA%A6%E6%9D%A1-%E6%B0%B4%E5%8D%B0)
+
+   2. 手動安裝
+
+      點 Tampermonkey 圖示 →「新增腳本」，把 `userscript/douyu-hide-progressbar.user.js` 的內容整份貼入並儲存（或把該檔拖進瀏覽器讓 Tampermonkey 安裝）
+
+2. 開斗魚頁面，點 Tampermonkey 圖示 →「斗魚優化設置」開啟設置面板
+
+**Chrome 擴充**
 
 1. 開啟 Chrome，網址列輸入 `chrome://extensions`
 2. 右上角打開「開發人員模式」
 3. 點左上角「載入未封裝項目」
-4. 選擇本專案的 `extension` 資料夾
+4. 選擇本專案的 `extension` 資料夾 ([下載鏈結](https://github.com/happk/douyu-hide-progressbar/releases))
 5. 開一個斗魚視頻頁面，進全屏測試
 6. 點工具列圖示開啟設置面板
 

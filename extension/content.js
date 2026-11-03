@@ -59,6 +59,10 @@
   let videoEl = null;      // 重播頁的 <video>（非全屏喚出區以它底緣為基準）
   let lastVideoLookup = 0;
   let pauseStyleEl = null; // 放在 DEMAND-VIDEO shadow root 裡的樣式
+  let shadowObservedRoot = null; // 已掛 observer 的 <demand-video> shadow root
+  let shadowObserver = null;     // 觀察 shadow root 內部的水印／播放鍵插入
+  const STARTUP_TICKS = [500, 1000, 2000, 4000, 8000, 15000, 30000]; // 啟動退避重試間隔
+  let startupIndex = 0;
 
   // ---- 穿透所有開放 Shadow DOM 找指定 tag 的自訂元素（host）----
   function findHost(tag) {
@@ -91,6 +95,7 @@
     lastVideoLookup = now;
     const host = findHost(VIDEO_TAG);
     videoEl = host && host.shadowRoot ? host.shadowRoot.querySelector("video") : null;
+    ensureShadowObserver();
     return videoEl;
   }
 
@@ -234,16 +239,17 @@
           if (n.nodeType !== 1) continue;
           const hit =
             n.tagName === VOD_WM_TAG ||
+            n.tagName === VIDEO_TAG ||
             (n.matches && n.matches(LIVE_WM_SELECTOR)) ||
             (n.querySelector &&
-              (n.querySelector(VOD_WM_TAG.toLowerCase()) || n.querySelector(LIVE_WM_SELECTOR)));
+              (n.querySelector(VOD_WM_TAG.toLowerCase()) ||
+                n.querySelector(VIDEO_TAG.toLowerCase()) ||
+                n.querySelector(LIVE_WM_SELECTOR)));
           if (hit) {
-            const wm = findWatermark();
-            if (wm && wm.style.display !== "none") {
-              wm.style.display = "none";
-              wmHidden = true;
-            }
+            applyWatermark(); // 播放器（或水印）掛載，重新套用
             applyPauseIcon(); // 整個播放器重建時 shadow root 是新的，樣式補掛
+            ensureShadowObserver();
+            ensureVideoEl();
             return;
           }
         }
@@ -267,6 +273,7 @@
     pauseStyleEl = document.createElement("style");
     pauseStyleEl.textContent = PAUSE_ICON_STYLE;
     host.shadowRoot.appendChild(pauseStyleEl);
+    ensureShadowObserver();
   }
 
   function restorePauseIcon() {
@@ -274,6 +281,39 @@
       pauseStyleEl.remove();
       pauseStyleEl = null;
     }
+  }
+
+  // body 的 observer 看不到 shadow root 內部的變更（水印、播放鍵都掛在那裡），
+  // 找到播放器後把另一個 observer 直接掛進 <demand-video> 的 shadow root；
+  // 播放器重建（shadow root 換新）時，下次發現後會自動重掛。
+  function ensureShadowObserver() {
+    let root = null;
+    if (videoEl && videoEl.isConnected) {
+      root = videoEl.getRootNode();
+    } else if (pauseStyleEl && pauseStyleEl.isConnected) {
+      root = pauseStyleEl.getRootNode();
+    }
+    if (!root || root === document || shadowObservedRoot === root) return;
+    if (shadowObserver) shadowObserver.disconnect();
+    shadowObserver = new MutationObserver(() => {
+      applyWatermark();
+      applyPauseIcon();
+    });
+    shadowObserver.observe(root, { childList: true, subtree: true });
+    shadowObservedRoot = root;
+  }
+
+  // 啟動退避重試：腳本執行時播放器往往還沒掛載，開場套用會撲空；
+  // 以 0.5s→30s 的間隔各補一次（有界），之後交給事件驅動的路徑。
+  function scheduleStartupRecheck() {
+    if (startupIndex >= STARTUP_TICKS.length) return;
+    const delay = STARTUP_TICKS[startupIndex++];
+    setTimeout(() => {
+      applyWatermark();
+      applyPauseIcon();
+      applyBarState();
+      scheduleStartupRecheck();
+    }, delay);
   }
 
   // ---- 設置 ----
@@ -319,5 +359,6 @@
     applyWatermark();
     applyPauseIcon();
     applyBarState();
+    scheduleStartupRecheck();
   });
 })();

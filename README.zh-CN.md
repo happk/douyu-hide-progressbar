@@ -48,18 +48,24 @@
 
 两种择一即可（同时装会重复做同样的事）：
 
-**Tampermonkey 脚本（建议）**
+**Tampermonkey 脚本**
 
 1. 浏览器安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展
-2. 点 Tampermonkey 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 Tampermonkey 安装）
-3. 开斗鱼页面，点 Tampermonkey 图标 →「斗鱼优化设置」打开设置面板
 
-**Chrome 扩展（加载未打包）**
+   1. Greasy Fork [链接](https://greasyfork.org/zh-TW/scripts/603642-%E6%96%97%E9%B1%BC%E9%9A%90%E8%97%8F%E8%BF%9B%E5%BA%A6%E6%9D%A1-%E6%B0%B4%E5%8D%B0)
+
+   2. 手动安装
+
+      点 Tampermonkey 图标 →「添加新脚本」，把 `userscript/douyu-hide-progressbar.user.js` 的内容整份贴入并保存（或把该文件拖进浏览器让 Tampermonkey 安装）
+
+2. 开斗鱼页面，点 Tampermonkey 图标 →「斗鱼优化设置」打开设置面板
+
+**Chrome 扩展**
 
 1. 打开 Chrome，地址栏输入 `chrome://extensions`
 2. 右上角打开「开发者模式」
 3. 点左上角「加载已解压的扩展程序」
-4. 选择本项目的 `extension` 文件夹
+4. 选择本项目的 `extension` 文件夹 ([下载链结](https://github.com/happk/douyu-hide-progressbar/releases))
 5. 开一个斗鱼视频页，进全屏测试
 6. 点工具栏图标打开设置面板
 

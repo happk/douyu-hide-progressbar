@@ -1,5 +1,24 @@
 # changelog — douyu-hide-progressbar（斗魚影片全屏隱藏進度條）
 
+## v1.5.3 — 2026-11-04 — 修正：頁面載入早期播放器未掛載時，水印與暫停鍵不隱藏
+
+### 問題
+
+- Tampermonkey 版實測：重播頁的左下角水印與暫停播放鍵不隱藏（控制列正常）。
+
+  根因：`@run-at document-idle` 貼著 DOMContentLoaded 執行，斗魚播放器尚未掛載，開場的水印／播放鍵套用全撲空；
+  之後兩者都加在 `<demand-video>` 的 shadow root 內部，而 MutationObserver 掛在 `document.body` 上——observer 的 subtree 不會跨越 shadow root 邊界，shadow 內部的新增永遠看不到，補掛時機再也等不到。
+
+- Chrome 擴充未踩到是時機恰好：`document_idle` 由瀏覽器在 document_end ～ `window.onload` 之後注入，播放器多半已掛載，開場套用直接命中。
+  機制上兩版帶著同一顆未爆彈；此前 IAB 測試在載入後 4 秒才注入，恰好落在安全側，未能發現。
+
+### 修正（擴充與 Tampermonkey 兩版同步）
+
+- 啟動退避重試：載入後以 0.5s／1s／2s／4s／8s／15s／30s 各補一次完整套用（有界序列，之後交給事件驅動路徑），兜住「腳本跑得比播放器早」。
+- body observer 的命中判斷加入 `<demand-video>` 整包插入——原先 `querySelector` 穿不進 shadow root，整包插入會被當成無關節點跳過。
+- 找到播放器（video 元素或播放鍵樣式）後，把另一個 observer 直接掛進 `<demand-video>` 的 shadow root，水印／播放鍵在內部新增時當場接到；播放器重建（shadow root 換新）時自動重掛。
+- 直播間水印原為 light DOM、body observer 看得到，行為不變；無常駐輪詢。
+
 ## v1.5.2 — 2026-11-04 — README 新增預覽圖
 
 - 繁中／簡中版「功能」章節加入 Tampermonkey 設置面板截圖（`assets/Tampermonkey-config.png`，`width` 屬性指定寬度——GitHub 會濾掉 `style`，`zoom` 不生效）。
