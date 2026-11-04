@@ -10,7 +10,7 @@
 
 ## 功能
 
-<img src="./assets/Tampermonkey-config.png" alt="Tampermonkey 設置面板" width="280" />
+<img src="./assets/展示-播放时.PNG" alt="展示-播放时" width="600" /><img src="./assets/展示-暂停时.PNG" alt="展示-暂停时" width="600" />
 
 - **全屏隱藏控制列**（重播頁限定）：
 
@@ -55,7 +55,7 @@
 
 1. 瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充
 
-   1. Greasy Fork [鏈結](https://greasyfork.org/zh-TW/scripts/603642-%E6%96%97%E9%B1%BC%E9%9A%90%E8%97%8F%E8%BF%9B%E5%BA%A6%E6%9D%A1-%E6%B0%B4%E5%8D%B0)
+   1. Greasy Fork [鏈結](https://greasyfork.org/scripts/603642)
 
    2. 手動安裝
 

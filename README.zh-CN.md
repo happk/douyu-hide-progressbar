@@ -10,7 +10,7 @@
 
 ## 功能
 
-<img src="./assets/Tampermonkey-config.png" alt="Tampermonkey 设置面板" width="280" />
+<img src="./assets/展示-播放时_簡體.PNG" alt="展示-播放时" width="500" /><img src="./assets/展示-暂停时_簡體.PNG" alt="展示-暂停时" width="500" />
 
 - **全屏隐藏控制栏**（重播页限定）：
 
@@ -55,7 +55,7 @@
 
 1. 浏览器安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展
 
-   1. Greasy Fork [链接](https://greasyfork.org/zh-TW/scripts/603642-%E6%96%97%E9%B1%BC%E9%9A%90%E8%97%8F%E8%BF%9B%E5%BA%A6%E6%9D%A1-%E6%B0%B4%E5%8D%B0)
+   1. Greasy Fork [链接](https://greasyfork.org/scripts/603642)
 
    2. 手动安装
 
@@ -68,7 +68,7 @@
 1. 打开 Chrome，地址栏输入 `chrome://extensions`
 2. 右上角打开「开发者模式」
 3. 点左上角「加载已解压的扩展程序」
-4. 选择本项目的 `extension` 文件夹 ([下载链结](https://github.com/happk/douyu-hide-progressbar/releases))
+4. 选择本项目的 `extension` 文件夹 ([下载链接](https://github.com/happk/douyu-hide-progressbar/releases))
 5. 开一个斗鱼视频页，进全屏测试
 6. 点工具栏图标打开设置面板
 
